@@ -47,13 +47,20 @@ defmodule Tinyurl.Links do
   ## Examples
 
       iex> get_link_by(hash: "foo")
-      %Link{}
+      {:ok, %Link{}}
 
       iex> get_link_by(hash: "bar")
-      ** nil
+      ** {:error, :not_found}
 
   """
-  def get_link_by(params), do: Repo.get_by(Link, params)
+  def get_link_by(params) do 
+    link = Repo.get_by(Link, params)
+    
+    case link do
+      %Link{} -> {:ok, link}
+      _ -> {:error, :not_found}
+    end
+  end
 
   @doc """
   Creates a link.
@@ -78,6 +85,7 @@ defmodule Tinyurl.Links do
         attrs
         |> change_link(hash)
         |> Repo.insert()
+        |> on_insert()
 
       _ ->
         {:error, seed: [format: :invalid]}
@@ -97,7 +105,9 @@ defmodule Tinyurl.Links do
 
   """
   def delete_link(%Link{} = link) do
-    Repo.delete(link)
+    link 
+    |> Repo.delete()
+    |> on_delete()
   end
 
   defp change_link(attrs, hash) when is_binary(hash) do
@@ -114,4 +124,18 @@ defmodule Tinyurl.Links do
   end
 
   defp change_link(attrs, _), do: Link.changeset(%Link{}, attrs)
+
+  defp on_insert(reply) do
+    with {:ok, %Link{} = link} <- reply do
+      LinkCache.refresh(link)
+      reply
+    end
+  end
+
+  defp on_delete(reply) do
+    with {:ok, %Link{} = link} <- reply do
+      LinkCache.delete(link)
+      reply
+    end
+  end
 end

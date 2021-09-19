@@ -8,6 +8,9 @@ defmodule Tinyurl.Cache.LinkCache do
 
   require Logger
 
+  @url_prefix "name:"
+  @hash_prefix "prefix:"
+
   ## Client API
 
   def start_link(config \\ []) do
@@ -16,6 +19,22 @@ defmodule Tinyurl.Cache.LinkCache do
 
   def get_seed do
     GenServer.call(__MODULE__, :get_seed)
+  end
+
+  def get_link_by_hash(hash) do
+    GenServer.call(__MODULE__, {:link_by_hash, hash})
+  end
+
+  def get_link_by_url(url) do
+    GenServer.call(__MODULE__, {:link_by_url, url})
+  end
+
+  def refresh(%{} = link) do
+    GenServer.cast(__MODULE__, {:refresh, link})
+  end
+
+  def delete(%{} = link) do
+    GenServer.cast(__MODULE__, {:delete, link})
   end
 
   ## GenServer Callbacks
@@ -30,5 +49,63 @@ defmodule Tinyurl.Cache.LinkCache do
   def handle_call(:get_seed, _from, state) do
     reply = Redix.command(:redix, ["INCR", "seed"])
     {:reply, reply, state}
+  end
+
+  @impl GenServer
+  def handle_call({:link_by_hash, hash}, _from, state) do
+    reply = Redix.command(:redix, ["HGET", "#{@hash_prefix}:#{hash}", "url"])
+
+    reply =
+      case reply do
+        {:ok, url} when is_binary(url) ->
+          {:ok, %{hash: hash, url: url}}
+
+        reply ->
+          reply
+      end
+
+    {:reply, {:ok, reply}, state}
+  end
+
+  @impl GenServer
+  def handle_call({:link_by_url, url}, _from, state) do
+    reply = Redix.command(:redix, ["HGET", "#{@url_prefix}:#{url}", "hash"])
+
+    reply =
+      case reply do
+        {:ok, hash} when is_binary(hash) ->
+          {:ok, %{hash: hash, url: url}}
+
+        reply ->
+          reply
+      end
+
+    {:reply, {:ok, reply}, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:refresh, link}, state) do
+    url = link.url
+    hash = link.hash
+
+    Redix.pipeline(:redix, [
+      ["HMSET", "#{@url_prefix}:#{url}", "hash", hash],
+      ["HMSET", "#{@hash_prefix}:#{hash}", "url", url]
+    ])
+
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:delete, link}, state) do
+    url = link.url
+    hash = link.hash
+
+    Redix.pipeline(:redix, [
+      ["DEL", "#{@url_prefix}:#{url}"],
+      ["DEL", "#{@hash_prefix}:#{hash}"]
+    ]) 
+
+    {:noreply, state}
   end
 end
