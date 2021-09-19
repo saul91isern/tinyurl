@@ -24,6 +24,7 @@ defmodule Tinyurl.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Tinyurl.DataCase
+      import Tinyurl.Factory
     end
   end
 

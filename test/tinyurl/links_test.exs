@@ -1,53 +1,61 @@
 defmodule Tinyurl.LinksTest do
   use Tinyurl.DataCase
 
+  alias Redis
+  alias Tinyurl.Cache.LinkCache
+  alias Tinyurl.Hasher
   alias Tinyurl.Links
+  alias Tinyurl.Links.Link
 
-  describe "links" do
-    alias Tinyurl.Links.Link
-
-    @valid_attrs %{hash: "some hash", url: "some url"}
-    @update_attrs %{hash: "some updated hash", url: "some updated url"}
-    @invalid_attrs %{hash: nil, url: nil}
-
-    def link_fixture(attrs \\ %{}) do
-      {:ok, link} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Links.create_link()
-
-      link
-    end
-
-    test "list_links/0 returns all links" do
-      link = link_fixture()
+  describe "list_links/0" do
+    test "returns all links" do
+      link = insert(:link)
       assert Links.list_links() == [link]
     end
+  end
 
-    test "get_link!/1 returns the link with given id" do
-      link = link_fixture()
+  describe "get_link!/1" do
+    test "returns the link with given id" do
+      link = insert(:link)
       assert Links.get_link!(link.id) == link
     end
 
-    test "create_link/1 with valid data creates a link" do
-      assert {:ok, %Link{} = link} = Links.create_link(@valid_attrs)
-      assert link.hash == "some hash"
-      assert link.url == "some url"
+    test "raises `Ecto.NoResultsError` if link does not exist" do
+      id = System.unique_integer([:positive])
+      assert_raise Ecto.NoResultsError, fn -> Links.get_link!(id) end
+    end
+  end
+
+  describe "get_link_by/1" do
+    test "returns the link with given params" do
+      link = %{url: url, hash: hash} = insert(:link)
+      assert Links.get_link_by(url: url) == link
+      assert Links.get_link_by(hash: hash) == link
+      assert Links.get_link_by(url: url, hash: hash) == link
     end
 
-    test "create_link/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Links.create_link(@invalid_attrs)
+    test "raises nil` if link does not exist" do
+      insert(:link)
+      refute Links.get_link_by(url: "made_up")
+    end
+  end
+
+  describe "create_link/1" do
+    setup do
+      {:ok, seed} = LinkCache.get_seed()
+      on_exit(fn -> Redix.command(:redix, ["DEL", "seed"]) end)
+      [seed: seed]
     end
 
-    test "delete_link/1 deletes the link" do
-      link = link_fixture()
-      assert {:ok, %Link{}} = Links.delete_link(link)
-      assert_raise Ecto.NoResultsError, fn -> Links.get_link!(link.id) end
+    test "creates a link with valid params", %{seed: seed} do
+      hash = Hasher.encode(seed + 1)
+      params = %{"url" => url} = string_params_for(:link) |> Map.take(["url"])
+      assert {:ok, %Link{hash: ^hash, url: ^url}} = Links.create_link(params)
     end
 
-    test "change_link/1 returns a link changeset" do
-      link = link_fixture()
-      assert %Ecto.Changeset{} = Links.change_link(link)
+    test "raises error if url not provided" do
+      assert {:error, %Ecto.Changeset{errors: [url: {"can't be blank", [validation: :required]}]}} =
+               Links.create_link(%{})
     end
   end
 end
