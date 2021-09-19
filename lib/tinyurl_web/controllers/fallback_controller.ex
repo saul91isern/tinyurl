@@ -21,4 +21,11 @@ defmodule TinyurlWeb.FallbackController do
     |> put_view(TinyurlWeb.ErrorView)
     |> render(:"404")
   end
+
+  def call(conn, {:ok, %{} = link}) when is_map_key(link, :url) and is_map_key(link, :hash) do
+    conn
+    |> put_status(303)
+    |> put_view(TinyurlWeb.ErrorView)
+    |> render(:"303")
+  end
 end

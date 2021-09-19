@@ -7,6 +7,9 @@ defmodule TinyurlWeb.Router do
 
   scope "/api", TinyurlWeb do
     pipe_through :api
+
+    resources "/links", LinkController, only: [:create, :delete, :index], param: "hash"
+    get "/:hash", LinkController, :redirect_external
   end
 
   # Enables LiveDashboard only for development

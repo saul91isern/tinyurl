@@ -1,6 +1,7 @@
 defmodule TinyurlWeb.LinkController do
   use TinyurlWeb, :controller
 
+  alias Tinyurl.Cache.LinkCache
   alias Tinyurl.Links
   alias Tinyurl.Links.Link
 
@@ -12,24 +13,36 @@ defmodule TinyurlWeb.LinkController do
   end
 
   def create(conn, %{"link" => link_params}) do
-    with {:ok, %Link{} = link} <- Links.create_link(link_params) do
+    url = Map.get(link_params, "url")
+
+    with {:ok, nil} <- LinkCache.get_link_by_url(url),
+         {:ok, %Link{} = link} <- Links.create_link(link_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.link_path(conn, :show, link))
       |> render("show.json", link: link)
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    link = Links.get_link!(id)
-    render(conn, "show.json", link: link)
+  def delete(conn, %{"hash" => hash}) when is_binary(hash) do
+    with %Link{} = link <- Links.get_link_by(hash: hash),
+         {:ok, %Link{}} <- Links.delete_link(link) do
+      send_resp(conn, :no_content, "")
+    end
   end
 
-  def delete(conn, %{"id" => id}) do
-    link = Links.get_link!(id)
+  def redirect_external(conn, %{"hash" => hash}) when is_binary(hash) do
+    with {:ok, %{url: url}} when is_binary(url) <-
+           LinkCache.get_link_by_hash(hash) do
+      redirect(conn, external: url)
+    else
+      {:ok, nil} -> redirect_external(conn, hash)
+    end
+  end
 
-    with {:ok, %Link{}} <- Links.delete_link(link) do
-      send_resp(conn, :no_content, "")
+  def redirect_external(conn, hash) when is_binary(hash) do
+    with {:ok, %Link{url: url}} <-
+           Links.get_link_by(hash: hash) do
+      redirect(conn, external: url)
     end
   end
 end
