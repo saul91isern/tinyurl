@@ -5,7 +5,7 @@ defmodule Tinyurl.MixProject do
     [
       app: :tinyurl,
       version: "0.1.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -20,7 +20,7 @@ defmodule Tinyurl.MixProject do
   def application do
     [
       mod: {Tinyurl.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :redix]
     ]
   end
 
@@ -44,7 +44,9 @@ defmodule Tinyurl.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:ex_machina, "~> 2.7", only: :test}
+      {:ex_machina, "~> 2.7", only: :test},
+      {:redix, "~> 1.1.4"},
+      {:base62, "~> 1.2"}
     ]
   end
 
