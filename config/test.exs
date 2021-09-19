@@ -18,5 +18,11 @@ config :tinyurl, TinyurlWeb.Endpoint,
   http: [port: 4002],
   server: false
 
+config :redix,
+  redis_host: "redis",
+  redis_port: 6380
+
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+
