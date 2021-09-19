@@ -4,9 +4,11 @@ defmodule Tinyurl.Links do
   """
 
   import Ecto.Query, warn: false
-  alias Tinyurl.Repo
 
+  alias Tinyurl.Cache.LinkCache
+  alias Tinyurl.Hasher
   alias Tinyurl.Links.Link
+  alias Tinyurl.Repo
 
   @doc """
   Returns the list of links.
@@ -38,6 +40,22 @@ defmodule Tinyurl.Links do
   def get_link!(id), do: Repo.get!(Link, id)
 
   @doc """
+  Gets a single link by given fields.
+
+  nil if the Link does not exist.
+
+  ## Examples
+
+      iex> get_link_by(hash: "foo")
+      %Link{}
+
+      iex> get_link_by(hash: "bar")
+      ** nil
+
+  """
+  def get_link_by(params), do: Repo.get_by(Link, params)
+
+  @doc """
   Creates a link.
 
   ## Examples
@@ -50,9 +68,20 @@ defmodule Tinyurl.Links do
 
   """
   def create_link(attrs \\ %{}) do
-    %Link{}
-    |> Link.changeset(attrs)
-    |> Repo.insert()
+    reply = LinkCache.get_seed()
+
+    case reply do
+      {:ok, seed} when is_number(seed) ->
+        # generate base 62 hash with seed
+        hash = Hasher.encode(seed)
+        # build changeset and insert
+        attrs
+        |> change_link(hash)
+        |> Repo.insert()
+
+      _ ->
+        {:error, seed: [format: :invalid]}
+    end
   end
 
   @doc """
@@ -71,16 +100,18 @@ defmodule Tinyurl.Links do
     Repo.delete(link)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking link changes.
+  defp change_link(attrs, hash) when is_binary(hash) do
+    attrs =
+      attrs
+      |> Enum.into(%{}, fn
+        {"url", value} -> {:url, value}
+        tuple -> tuple
+      end)
+      |> Map.take([:url])
+      |> Map.put(:hash, hash)
 
-  ## Examples
-
-      iex> change_link(link)
-      %Ecto.Changeset{data: %Link{}}
-
-  """
-  def change_link(%Link{} = link, attrs \\ %{}) do
-    Link.changeset(link, attrs)
+    Link.changeset(%Link{}, attrs)
   end
+
+  defp change_link(attrs, _), do: Link.changeset(%Link{}, attrs)
 end
