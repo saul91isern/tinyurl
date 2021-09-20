@@ -41,7 +41,8 @@ defmodule Tinyurl.Application do
 
   defp workers(_env) do
     [
-      Tinyurl.Cache.LinkCache
+      Tinyurl.Cache.LinkCache,
+      Tinyurl.Scheduler
     ]
   end
 end

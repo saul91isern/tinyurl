@@ -13,10 +13,11 @@ defmodule TinyurlWeb.LinkController do
   end
 
   def create(conn, %{"link" => link_params}) do
-    url = Map.get(link_params, "url")
+    params = Map.take(link_params, ["url"])
+    url = Map.get(params, "url")
 
     with {:ok, nil} <- LinkCache.get_link_by_url(url),
-         {:ok, %Link{} = link} <- Links.create_link(link_params) do
+         {:ok, %Link{} = link} <- Links.create_link(params) do
       conn
       |> put_status(:created)
       |> render("show.json", link: link)

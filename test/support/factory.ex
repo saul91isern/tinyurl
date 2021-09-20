@@ -4,7 +4,7 @@ defmodule Tinyurl.Factory do
   """
   use ExMachina.Ecto, repo: Tinyurl.Repo
 
-  def link_factory(attrs) do
+  def link_factory do
     %Tinyurl.Links.Link{
       url: "http://foo/bar",
       hash: sequence("foo")

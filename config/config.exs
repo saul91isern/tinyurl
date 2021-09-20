@@ -30,6 +30,14 @@ config :redix,
   redis_host: "redis",
   redis_port: 6379 
 
+config :tinyurl, Tinyurl.Scheduler,
+  jobs: [
+    [
+      schedule: "@hourly",
+      task: {Tinyurl.Cache.LinkCache, :reset_seed, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ]
+  ]
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
