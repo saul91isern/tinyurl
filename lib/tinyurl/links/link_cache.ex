@@ -1,6 +1,6 @@
 defmodule Tinyurl.Cache.LinkCache do
   @moduledoc """
-  Link cache utility.
+  Link cache utility. It handles the side effects of the API
   """
   use GenServer
 
