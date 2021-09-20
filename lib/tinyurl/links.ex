@@ -53,9 +53,9 @@ defmodule Tinyurl.Links do
       ** {:error, :not_found}
 
   """
-  def get_link_by(params) do 
+  def get_link_by(params) do
     link = Repo.get_by(Link, params)
-    
+
     case link do
       %Link{} -> {:ok, link}
       _ -> {:error, :not_found}
@@ -105,7 +105,7 @@ defmodule Tinyurl.Links do
 
   """
   def delete_link(%Link{} = link) do
-    link 
+    link
     |> Repo.delete()
     |> on_delete()
   end

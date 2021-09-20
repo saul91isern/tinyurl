@@ -1,5 +1,8 @@
 defmodule CacheHelpers do
-  def clean() do
+  @moduledoc """
+      Functions to support test operations over cache 
+  """
+  def clean do
     Redix.command(:redix, ["DEL", "seed"])
     clean_urls()
     clean_hashes()

@@ -1,4 +1,7 @@
 defmodule Tinyurl.Links.Link do
+  @moduledoc """ 
+  Represents a Link schema 
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

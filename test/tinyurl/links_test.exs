@@ -39,7 +39,7 @@ defmodule Tinyurl.LinksTest do
       assert Links.get_link_by(url: url, hash: hash) == {:ok, link}
     end
 
-    test "raises nil` if link does not exist" do
+    test "returns not_found if link does not exist" do
       insert(:link)
       assert {:error, :not_found} = Links.get_link_by(url: "made_up")
     end
@@ -50,7 +50,7 @@ defmodule Tinyurl.LinksTest do
       hash = Hasher.encode(seed + 1)
       params = %{"url" => url} = string_params_for(:link) |> Map.take(["url"])
       assert {:ok, %Link{hash: ^hash, url: ^url} = link} = Links.create_link(params)
-      
+
       on_exit(fn -> LinkCache.delete(link) end)
     end
 

@@ -104,7 +104,7 @@ defmodule Tinyurl.Cache.LinkCache do
     Redix.pipeline(:redix, [
       ["DEL", "#{@url_prefix}:#{url}"],
       ["DEL", "#{@hash_prefix}:#{hash}"]
-    ]) 
+    ])
 
     {:noreply, state}
   end

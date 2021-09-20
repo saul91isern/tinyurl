@@ -1,4 +1,7 @@
 defmodule EctoURL do
+  @moduledoc """
+  Ecto type representing links in database
+  """
   use Ecto.Type
   def type, do: :string
 

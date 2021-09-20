@@ -60,6 +60,29 @@ defmodule TinyurlWeb.LinkControllerTest do
     end
   end
 
+  describe "redirect external" do
+    setup do
+      link = create_link()
+
+      on_exit(fn ->
+        CacheHelpers.clean()
+      end)
+
+      [link: link]
+    end
+
+    test "redirects to url on hash redirect", %{conn: conn, link: %{hash: hash, url: url}} do
+      conn = get(conn, Routes.link_path(conn, :redirect_external, hash))
+      response = response(conn, 302)
+      assert String.contains?(response, url)
+    end
+
+    test "returns 404 if link is not found", %{conn: conn} do
+      conn = get(conn, Routes.link_path(conn, :redirect_external, "xyz"))
+      assert %{"errors" => %{"detail" => "Not Found"}} = json_response(conn, 404)
+    end
+  end
+
   defp create_link do
     params = string_params_for(:link) |> Map.take(["url"])
     {:ok, link} = Links.create_link(params)
