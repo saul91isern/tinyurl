@@ -8,8 +8,8 @@ defmodule Tinyurl.Cache.LinkCache do
 
   require Logger
 
-  @url_prefix "name:"
-  @hash_prefix "prefix:"
+  @url_prefix "url"
+  @hash_prefix "hash"
 
   ## Client API
 
@@ -64,7 +64,7 @@ defmodule Tinyurl.Cache.LinkCache do
           reply
       end
 
-    {:reply, {:ok, reply}, state}
+    {:reply, reply, state}
   end
 
   @impl GenServer
@@ -80,7 +80,7 @@ defmodule Tinyurl.Cache.LinkCache do
           reply
       end
 
-    {:reply, {:ok, reply}, state}
+    {:reply, reply, state}
   end
 
   @impl GenServer

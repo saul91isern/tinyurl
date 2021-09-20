@@ -23,14 +23,14 @@ defmodule TinyurlWeb.LinkController do
     end
   end
 
-  def delete(conn, %{"hash" => hash}) when is_binary(hash) do
+  def delete(conn, %{"hash" => hash}) do
     with %Link{} = link <- Links.get_link_by(hash: hash),
          {:ok, %Link{}} <- Links.delete_link(link) do
       send_resp(conn, :no_content, "")
     end
   end
 
-  def redirect_external(conn, %{"hash" => hash}) when is_binary(hash) do
+  def redirect_external(conn, %{"hash" => hash}) do
     with {:ok, %{url: url}} when is_binary(url) <-
            LinkCache.get_link_by_hash(hash) do
       redirect(conn, external: url)
@@ -39,7 +39,7 @@ defmodule TinyurlWeb.LinkController do
     end
   end
 
-  def redirect_external(conn, hash) when is_binary(hash) do
+  def redirect_external(conn, hash) do
     with {:ok, %Link{url: url}} <-
            Links.get_link_by(hash: hash) do
       redirect(conn, external: url)

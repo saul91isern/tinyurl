@@ -11,8 +11,6 @@ defmodule TinyurlWeb.LinkView do
   end
 
   def render("link.json", %{link: link}) do
-    %{id: link.id,
-      url: link.url,
-      hash: link.hash}
+    %{url: link.url, hash: link.hash}
   end
 end
