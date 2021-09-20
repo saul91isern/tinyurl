@@ -2,6 +2,7 @@ defmodule Tinyurl.Cache.LinkCacheTest do
   use Tinyurl.DataCase
 
   alias Tinyurl.Cache.LinkCache
+  alias Tinyurl.Links
   alias Tinyurl.RedisHelper
 
   setup do
@@ -63,6 +64,18 @@ defmodule Tinyurl.Cache.LinkCacheTest do
       assert {:ok, ^link} = LinkCache.get_link_by_hash(hash)
       assert :ok == LinkCache.delete(link)
       assert {:ok, nil} = LinkCache.get_link_by_hash(hash)
+    end
+  end
+
+  describe "reset_seed/1" do
+    test "resets seed by max id in cache" do
+      insert(:link)
+      id = Links.max_id()
+      assert {:ok, "OK"} = LinkCache.reset_seed()
+      assert {:ok, seed} = LinkCache.get_seed() 
+      assert seed == id + 1
+      assert {:ok, seed} = LinkCache.get_seed() 
+      assert seed == id + 2
     end
   end
 end

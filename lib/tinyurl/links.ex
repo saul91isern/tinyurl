@@ -24,6 +24,24 @@ defmodule Tinyurl.Links do
   end
 
   @doc """
+  Gets max links id.
+
+  ## Examples
+
+      iex> max_id()
+      1
+
+      iex> max_id()
+      nil
+
+  """
+  def max_id do 
+    Link
+    |> select([l], max(l.id))
+    |> Repo.one()
+  end
+
+  @doc """
   Gets a single link.
 
   Raises `Ecto.NoResultsError` if the Link does not exist.

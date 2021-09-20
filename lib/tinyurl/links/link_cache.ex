@@ -4,6 +4,7 @@ defmodule Tinyurl.Cache.LinkCache do
   """
   use GenServer
 
+  alias Tinyurl.Links
   alias Tinyurl.RedisHelper
 
   require Logger
@@ -16,6 +17,10 @@ defmodule Tinyurl.Cache.LinkCache do
 
   def get_seed do
     GenServer.call(__MODULE__, :get_seed)
+  end
+
+  def reset_seed do
+    GenServer.call(__MODULE__, :reset_seed)
   end
 
   def get_link_by_hash(hash) do
@@ -45,6 +50,13 @@ defmodule Tinyurl.Cache.LinkCache do
   @impl GenServer
   def handle_call(:get_seed, _from, state) do
     reply = RedisHelper.get_seed()
+    {:reply, reply, state}
+  end
+
+  @impl GenServer
+  def handle_call(:reset_seed, _from, state) do
+    id = Links.max_id()
+    reply = RedisHelper.set_seed(id)
     {:reply, reply, state}
   end
 

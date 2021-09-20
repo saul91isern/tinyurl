@@ -12,6 +12,12 @@ defmodule Tinyurl.RedisHelper do
     Redix.command(:redix, ["INCR", "seed"])
   end
 
+  def set_seed(id) when is_number(id) do
+    Redix.command(:redix, ["SET", "seed", id])
+  end
+
+  def set_seed(_id), do: {:ok, []}
+
   def get_link_by_hash(hash) do
     reply = Redix.command(:redix, ["HGET", "#{@hash_prefix}:#{hash}", "url"])
 
