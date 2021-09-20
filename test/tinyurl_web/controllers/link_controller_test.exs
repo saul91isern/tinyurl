@@ -1,23 +1,9 @@
 defmodule TinyurlWeb.LinkControllerTest do
   use TinyurlWeb.ConnCase
 
+  alias Tinyurl.Cache.LinkCache
+  alias Tinyurl.Hasher
   alias Tinyurl.Links
-  alias Tinyurl.Links.Link
-
-  @create_attrs %{
-    hash: "some hash",
-    url: "some url"
-  }
-  @update_attrs %{
-    hash: "some updated hash",
-    url: "some updated url"
-  }
-  @invalid_attrs %{hash: nil, url: nil}
-
-  def fixture(:link) do
-    {:ok, link} = Links.create_link(@create_attrs)
-    link
-  end
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -25,68 +11,61 @@ defmodule TinyurlWeb.LinkControllerTest do
 
   describe "index" do
     test "lists all links", %{conn: conn} do
+      %{url: url, hash: hash} = insert(:link)
       conn = get(conn, Routes.link_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert [%{"url" => ^url, "hash" => ^hash}] = json_response(conn, 200)["data"]
     end
   end
 
   describe "create link" do
-    test "renders link when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.link_path(conn, :create), link: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+    setup do
+      link = create_link()
 
-      conn = get(conn, Routes.link_path(conn, :show, id))
+      on_exit(fn ->
+        CacheHelpers.clean()
+      end)
 
-      assert %{
-               "id" => id,
-               "hash" => "some hash",
-               "url" => "some url"
-             } = json_response(conn, 200)["data"]
+      {:ok, seed} = LinkCache.get_seed()
+
+      [link: link, seed: seed]
     end
 
-    test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.link_path(conn, :create), link: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
+    test "renders link when data is valid", %{conn: conn, seed: seed} do
+      url = "http://valid/url"
+      hash = Hasher.encode(seed + 1)
+      conn = post(conn, Routes.link_path(conn, :create), link: %{"url" => url})
+      assert %{"url" => ^url, "hash" => ^hash} = json_response(conn, 201)["data"]
 
-  describe "update link" do
-    setup [:create_link]
-
-    test "renders link when data is valid", %{conn: conn, link: %Link{id: id} = link} do
-      conn = put(conn, Routes.link_path(conn, :update, link), link: @update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-      conn = get(conn, Routes.link_path(conn, :show, id))
-
-      assert %{
-               "id" => id,
-               "hash" => "some updated hash",
-               "url" => "some updated url"
-             } = json_response(conn, 200)["data"]
+      on_exit(fn ->
+        LinkCache.delete(%{url: url, hash: hash})
+      end)
     end
 
-    test "renders errors when data is invalid", %{conn: conn, link: link} do
-      conn = put(conn, Routes.link_path(conn, :update, link), link: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
+    test "returns 303 if resource is already cached", %{conn: conn, link: %{url: url}} do
+      conn = post(conn, Routes.link_path(conn, :create), link: %{"url" => url})
+      assert %{"errors" => %{"detail" => "See Other"}} = json_response(conn, 303)
     end
-  end
 
-  describe "delete link" do
-    setup [:create_link]
+    test "renders errors when no url provided", %{conn: conn} do
+      conn = post(conn, Routes.link_path(conn, :create), link: %{"url" => nil})
+      assert %{"url" => ["can't be blank"]} = json_response(conn, 422)["errors"]
+    end
 
-    test "deletes chosen link", %{conn: conn, link: link} do
-      conn = delete(conn, Routes.link_path(conn, :delete, link))
-      assert response(conn, 204)
+    test "renders errors when url is invalid", %{conn: conn} do
+      conn = post(conn, Routes.link_path(conn, :create), link: %{"url" => "domain.net"})
+      assert %{"url" => ["expected schema to be informed"]} = json_response(conn, 422)["errors"]
 
-      assert_error_sent 404, fn ->
-        get(conn, Routes.link_path(conn, :show, link))
-      end
+      conn = post(conn, Routes.link_path(conn, :create), link: %{"url" => "http://"})
+      assert %{"url" => ["expected host to be informed"]} = json_response(conn, 422)["errors"]
     end
   end
 
-  defp create_link(_) do
-    link = fixture(:link)
-    %{link: link}
+  defp create_link do
+    params = string_params_for(:link) |> Map.take(["url"])
+    {:ok, link} = Links.create_link(params)
+
+    on_exit(fn -> LinkCache.delete(link) end)
+
+    link
   end
 end

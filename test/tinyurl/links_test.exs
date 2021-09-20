@@ -1,7 +1,6 @@
 defmodule Tinyurl.LinksTest do
   use Tinyurl.DataCase
 
-  alias Redis
   alias Tinyurl.Cache.LinkCache
   alias Tinyurl.Hasher
   alias Tinyurl.Links
@@ -9,7 +8,7 @@ defmodule Tinyurl.LinksTest do
 
   setup do
     {:ok, seed} = LinkCache.get_seed()
-    on_exit(fn -> Redix.command(:redix, ["DEL", "seed"]) end)
+    on_exit(fn -> CacheHelpers.clean() end)
     [seed: seed]
   end
 

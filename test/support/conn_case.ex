@@ -22,6 +22,7 @@ defmodule TinyurlWeb.ConnCase do
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
+      import Tinyurl.Factory
       import TinyurlWeb.ConnCase
 
       alias TinyurlWeb.Router.Helpers, as: Routes
