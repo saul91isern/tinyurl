@@ -34,6 +34,7 @@ defmodule TinyurlWeb.LinkController do
     case LinkCache.get_link_by_hash(hash) do
       {:ok, %{url: url}} when is_binary(url) -> redirect(conn, external: url)
       {:ok, nil} -> redirect_external(conn, hash)
+      error -> error
     end
   end
 
