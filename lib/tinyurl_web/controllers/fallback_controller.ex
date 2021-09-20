@@ -22,6 +22,7 @@ defmodule TinyurlWeb.FallbackController do
     |> render(:"404")
   end
 
+  # This clause handles the creation a link when it already exists and the creation is not needed.
   def call(conn, {:ok, %{} = link}) when is_map_key(link, :url) and is_map_key(link, :hash) do
     conn
     |> put_status(303)
