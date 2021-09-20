@@ -4,12 +4,9 @@ defmodule Tinyurl.Cache.LinkCache do
   """
   use GenServer
 
-  alias Redix
+  alias Tinyurl.RedisHelper
 
   require Logger
-
-  @url_prefix "url"
-  @hash_prefix "hash"
 
   ## Client API
 
@@ -47,65 +44,31 @@ defmodule Tinyurl.Cache.LinkCache do
 
   @impl GenServer
   def handle_call(:get_seed, _from, state) do
-    reply = Redix.command(:redix, ["INCR", "seed"])
+    reply = RedisHelper.get_seed()
     {:reply, reply, state}
   end
 
   @impl GenServer
   def handle_call({:link_by_hash, hash}, _from, state) do
-    reply = Redix.command(:redix, ["HGET", "#{@hash_prefix}:#{hash}", "url"])
-
-    reply =
-      case reply do
-        {:ok, url} when is_binary(url) ->
-          {:ok, %{hash: hash, url: url}}
-
-        reply ->
-          reply
-      end
-
+    reply = RedisHelper.get_link_by_hash(hash)
     {:reply, reply, state}
   end
 
   @impl GenServer
   def handle_call({:link_by_url, url}, _from, state) do
-    reply = Redix.command(:redix, ["HGET", "#{@url_prefix}:#{url}", "hash"])
-
-    reply =
-      case reply do
-        {:ok, hash} when is_binary(hash) ->
-          {:ok, %{hash: hash, url: url}}
-
-        reply ->
-          reply
-      end
-
+    reply = RedisHelper.get_link_by_url(url)
     {:reply, reply, state}
   end
 
   @impl GenServer
   def handle_cast({:refresh, link}, state) do
-    url = link.url
-    hash = link.hash
-
-    Redix.pipeline(:redix, [
-      ["HMSET", "#{@url_prefix}:#{url}", "hash", hash],
-      ["HMSET", "#{@hash_prefix}:#{hash}", "url", url]
-    ])
-
+    RedisHelper.put_link(link)
     {:noreply, state}
   end
 
   @impl GenServer
   def handle_cast({:delete, link}, state) do
-    url = link.url
-    hash = link.hash
-
-    Redix.pipeline(:redix, [
-      ["DEL", "#{@url_prefix}:#{url}"],
-      ["DEL", "#{@hash_prefix}:#{hash}"]
-    ])
-
+    RedisHelper.delete_link(link)
     {:noreply, state}
   end
 end
