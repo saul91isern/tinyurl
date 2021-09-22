@@ -47,7 +47,8 @@ defmodule Tinyurl.MixProject do
       {:ex_machina, "~> 2.7", only: :test},
       {:redix, "~> 1.1.4"},
       {:base62, "~> 1.2"},
-      {:quantum, "~> 3.0"}
+      {:quantum, "~> 3.0"},
+      {:cors_plug, "~> 2.0"}
     ]
   end
 
