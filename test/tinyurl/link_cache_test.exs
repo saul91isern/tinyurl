@@ -14,7 +14,7 @@ defmodule Tinyurl.Cache.LinkCacheTest do
 
     link = Map.take(build(:link), [:url, :hash])
     {:ok, _} = RedisHelper.put_link(link)
-   
+
     [link: link]
   end
 
@@ -72,9 +72,9 @@ defmodule Tinyurl.Cache.LinkCacheTest do
       insert(:link)
       id = Links.max_id()
       assert {:ok, "OK"} = LinkCache.reset_seed()
-      assert {:ok, seed} = LinkCache.get_seed() 
+      assert {:ok, seed} = LinkCache.get_seed()
       assert seed == id + 1
-      assert {:ok, seed} = LinkCache.get_seed() 
+      assert {:ok, seed} = LinkCache.get_seed()
       assert seed == id + 2
     end
   end

@@ -83,6 +83,29 @@ defmodule TinyurlWeb.LinkControllerTest do
     end
   end
 
+  describe "delete" do
+    setup do
+      link = create_link()
+
+      on_exit(fn ->
+        CacheHelpers.clean()
+      end)
+
+      [link: link]
+    end
+
+    test "deletes link by specified hash", %{conn: conn, link: %{hash: hash}} do
+      conn = delete(conn, Routes.link_path(conn, :delete, hash))
+      assert "" == response(conn, 204)
+      assert {:error, :not_found} = Links.get_link_by(hash: hash)
+    end
+
+    test "returns 404 if link is not found", %{conn: conn} do
+      conn = delete(conn, Routes.link_path(conn, :delete, "xyz"))
+      assert %{"errors" => %{"detail" => "Not Found"}} = json_response(conn, 404)
+    end
+  end
+
   defp create_link do
     params = string_params_for(:link) |> Map.take(["url"])
     {:ok, link} = Links.create_link(params)

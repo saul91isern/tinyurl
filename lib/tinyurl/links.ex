@@ -35,7 +35,7 @@ defmodule Tinyurl.Links do
       nil
 
   """
-  def max_id do 
+  def max_id do
     Link
     |> select([l], max(l.id))
     |> Repo.one()

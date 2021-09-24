@@ -25,7 +25,7 @@ defmodule TinyurlWeb.LinkController do
   end
 
   def delete(conn, %{"hash" => hash}) do
-    with %Link{} = link <- Links.get_link_by(hash: hash),
+    with {:ok, %Link{} = link} <- Links.get_link_by(hash: hash),
          {:ok, %Link{}} <- Links.delete_link(link) do
       send_resp(conn, :no_content, "")
     end
