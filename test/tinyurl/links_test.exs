@@ -5,6 +5,7 @@ defmodule Tinyurl.LinksTest do
   alias Tinyurl.Hasher
   alias Tinyurl.Links
   alias Tinyurl.Links.Link
+  alias Tinyurl.Repo
 
   setup do
     {:ok, seed} = LinkCache.get_seed()
@@ -59,6 +60,20 @@ defmodule Tinyurl.LinksTest do
       assert {:ok, %Link{hash: ^hash, url: ^url} = link} = Links.create_link(params)
 
       on_exit(fn -> LinkCache.delete(link) end)
+    end
+
+    test "raises error if hash repeated" do
+      %{hash: hash} = insert(:link)
+      changeset = Link.changeset(%Link{}, %{url: "http://made/up", hash: hash})
+
+      assert {:error,
+              %{
+                errors: [
+                  hash:
+                    {"has already been taken",
+                     [constraint: :unique, constraint_name: "links_hash_index"]}
+                ]
+              }} = Repo.insert(changeset)
     end
 
     test "raises error if url not provided" do

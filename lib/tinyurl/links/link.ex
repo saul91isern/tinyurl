@@ -20,9 +20,9 @@ defmodule Tinyurl.Links.Link do
     link
     |> cast(attrs, [:url, :hash])
     |> validate_required([:url, :hash])
+    |> unique_constraint(:hash)
     |> validate_length(:hash, max: @hash_size)
     |> validate_length(:url, max: @url_size)
-    |> unique_constraint(:hash)
     |> validate_change(:url, &valid_url?/2)
   end
 

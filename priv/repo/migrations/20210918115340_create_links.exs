@@ -9,6 +9,6 @@ defmodule Tinyurl.Repo.Migrations.CreateLinks do
       timestamps()
     end
 
-    unique_index("links", [:hash])
+    create(unique_index("links", [:hash]))
   end
 end
