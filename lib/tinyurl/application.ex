@@ -8,7 +8,7 @@ defmodule Tinyurl.Application do
   def start(_type, _args) do
     env = Application.get_env(:tinyurl, :env)
     redis_host = Application.get_env(:redix, :redis_host, "redis")
-    port = Application.get_env(:redix, :port, 6379)
+    port = Application.get_env(:redix, :redis_port, 6379)
 
     children = [
       # Start the Ecto repository
