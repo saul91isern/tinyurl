@@ -17,6 +17,13 @@ defmodule Tinyurl.LinksTest do
       link = insert(:link)
       assert Links.list_links() == [link]
     end
+
+    test "search over url or hash if quey specified" do
+      link = %{hash: hash, url: url} = insert(:link)
+      assert Links.list_links(search: String.slice(hash, 0, 2)) == [link]
+      assert Links.list_links(search: String.slice(url, 0, 2)) == [link]
+      assert Links.list_links(search: "made up") == []
+    end
   end
 
   describe "get_link!/1" do

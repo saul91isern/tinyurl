@@ -15,6 +15,18 @@ defmodule TinyurlWeb.LinkControllerTest do
       conn = get(conn, Routes.link_path(conn, :index))
       assert [%{"url" => ^url, "hash" => ^hash}] = json_response(conn, 200)["data"]
     end
+
+    test "lists all links filterd by query", %{conn: conn} do
+      %{url: url, hash: hash} = insert(:link)
+      conn = get(conn, Routes.link_path(conn, :index), q: String.slice(hash, 0, 2))
+      assert [%{"url" => ^url, "hash" => ^hash}] = json_response(conn, 200)["data"]
+
+      conn = get(conn, Routes.link_path(conn, :index), q: String.slice(url, 0, 2))
+      assert [%{"url" => ^url, "hash" => ^hash}] = json_response(conn, 200)["data"]
+
+      conn = get(conn, Routes.link_path(conn, :index), q: "made_up")
+      assert [] = json_response(conn, 200)["data"]
+    end
   end
 
   describe "create link" do

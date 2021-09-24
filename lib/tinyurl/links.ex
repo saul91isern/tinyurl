@@ -19,8 +19,10 @@ defmodule Tinyurl.Links do
       [%Link{}, ...]
 
   """
-  def list_links do
-    Repo.all(Link)
+  def list_links(opts \\ []) do
+    Link
+    |> filter(opts[:search])
+    |> Repo.all()
   end
 
   @doc """
@@ -127,6 +129,14 @@ defmodule Tinyurl.Links do
     |> Repo.delete()
     |> on_delete()
   end
+
+  defp filter(query, search) when byte_size(search) > 0 do
+    query
+    |> or_where([l], ilike(l.url, ^"%#{search}%"))
+    |> or_where([l], ilike(l.hash, ^"%#{search}%"))
+  end
+
+  defp filter(query, _search), do: query
 
   defp change_link(attrs, hash) when is_binary(hash) do
     attrs =

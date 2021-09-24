@@ -7,8 +7,9 @@ defmodule TinyurlWeb.LinkController do
 
   action_fallback TinyurlWeb.FallbackController
 
-  def index(conn, _params) do
-    links = Links.list_links()
+  def index(conn, params) do
+    opts = [search: Map.get(params, "q")]
+    links = Links.list_links(opts)
     render(conn, "index.json", links: links)
   end
 
