@@ -7,9 +7,7 @@ defmodule TinyurlWeb.Router do
 
   scope "/api", TinyurlWeb do
     pipe_through :api
-
     resources "/links", LinkController, only: [:create, :delete, :index], param: "hash"
-    get "/:hash", LinkController, :redirect_external
   end
 
   # Enables LiveDashboard only for development
@@ -22,9 +20,10 @@ defmodule TinyurlWeb.Router do
   if Mix.env() in [:dev, :test] do
     import Phoenix.LiveDashboard.Router
 
-    scope "/" do
-      pipe_through [:fetch_session, :protect_from_forgery]
+    scope "/", TinyurlWeb do
+      pipe_through [:fetch_session, :protect_from_forgery, :api]
       live_dashboard "/dashboard", metrics: TinyurlWeb.Telemetry
+      get "/:hash", LinkController, :redirect_external
     end
   end
 end
