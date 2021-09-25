@@ -136,7 +136,7 @@ defmodule Tinyurl.Links do
   ## Examples
 
       iex> duplicated_links()
-      [%{url: "", ids: [...]}]
+      [%{url: "", links: [...]}]
 
   """
   def duplicated_links do

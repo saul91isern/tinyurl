@@ -34,8 +34,14 @@ defmodule Tinyurl.DataCase do
   setup tags do
     :ok = Sandbox.checkout(Tinyurl.Repo)
 
-    unless tags[:async] do
+    if tags[:async] or tags[:sandbox] == :shared do
       Sandbox.mode(Tinyurl.Repo, {:shared, self()})
+    else
+      parent = self()
+
+      allow(parent, [
+        Tinyurl.Cache.LinkCache
+      ])
     end
 
     :ok
@@ -54,6 +60,15 @@ defmodule Tinyurl.DataCase do
       Regex.replace(~r"%{(\w+)}", message, fn _, key ->
         opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
       end)
+    end)
+  end
+
+  defp allow(parent, workers) do
+    Enum.each(workers, fn worker ->
+      case Process.whereis(worker) do
+        nil -> nil
+        pid -> Sandbox.allow(Tinyurl.Repo, parent, pid)
+      end
     end)
   end
 end

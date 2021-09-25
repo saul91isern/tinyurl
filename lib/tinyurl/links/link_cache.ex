@@ -95,15 +95,22 @@ defmodule Tinyurl.Cache.LinkCache do
     # we want to get all duplicated links by url
     # and keep only one of the links and delete
     # the rest of them
+    clean_duplicates()
+    # then we load all links into cache
+    load_data()
 
+    {:noreply, state}
+  end
+
+  defp clean_duplicates do
     links_to_delete =
       Links.duplicated_links()
-      |> Enum.flat_map(fn [_head | tail] -> tail end)
+      |> Enum.flat_map(fn %{links: [_head | tail]} -> tail end)
       |> Enum.map(fn %{"id" => id, "url" => url, "hash" => hash} ->
         %{id: id, url: url, hash: hash}
       end)
 
-    ids_to_delete = Enum.uniq_by(links_to_delete, & &1.id)
+    ids_to_delete = links_to_delete |> Enum.map(& &1.id) |> Enum.uniq()
 
     {deleted, _} = Links.delete_all(ids_to_delete)
 
@@ -119,13 +126,14 @@ defmodule Tinyurl.Cache.LinkCache do
         "Deletion in cache finished with #{Enum.count(oks)} deletions and #{Enum.count(errors)} errors"
       )
     end
+  end
 
+  defp load_data do
     {oks, errors} =
       Links.list_links()
       |> Enum.map(&RedisHelper.put_link/1)
       |> Enum.split_with(&(elem(&1, 0) == :ok))
 
-    Logger.info("Put #{Enum.count(oks)} links with #{Enum.count(errors)} erros")
-    {:noreply, state}
+    Logger.info("Put #{Enum.count(oks)} links with #{Enum.count(errors)} errors")
   end
 end

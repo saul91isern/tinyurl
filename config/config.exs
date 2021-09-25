@@ -10,6 +10,8 @@ use Mix.Config
 config :tinyurl,
   ecto_repos: [Tinyurl.Repo]
 
+config :tinyurl, :env, Mix.env()
+
 # Configures the endpoint
 config :tinyurl, TinyurlWeb.Endpoint,
   url: [host: "localhost"],

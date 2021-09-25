@@ -5,6 +5,11 @@ defmodule TinyurlWeb.LinkControllerTest do
   alias Tinyurl.Hasher
   alias Tinyurl.Links
 
+  setup_all do
+    start_supervised!(Tinyurl.Cache.LinkCache)
+    :ok
+  end
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end

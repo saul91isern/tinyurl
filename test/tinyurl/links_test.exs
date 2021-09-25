@@ -7,6 +7,11 @@ defmodule Tinyurl.LinksTest do
   alias Tinyurl.Links.Link
   alias Tinyurl.Repo
 
+  setup_all do
+    start_supervised!(Tinyurl.Cache.LinkCache)
+    :ok
+  end
+  
   setup do
     {:ok, seed} = LinkCache.get_seed()
     on_exit(fn -> CacheHelpers.clean() end)
