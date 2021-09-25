@@ -27,3 +27,4 @@ tinyurl-*.tar
 # this depending on your deployment strategy.
 /priv/static/
 
+.mix/
