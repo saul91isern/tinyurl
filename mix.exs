@@ -4,13 +4,23 @@ defmodule Tinyurl.MixProject do
   def project do
     [
       app: :tinyurl,
-      version: "0.1.0",
+      version: case System.get_env("APP_VERSION") do
+        nil -> "0.1.0-local"
+        v -> v
+      end,
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: [
+        td_auth: [
+          include_executables_for: [:unix],
+          applications: [runtime_tools: :permanent],
+          steps: [:assemble, &copy_bin_files/1, :tar]
+        ]
+      ]
     ]
   end
 
@@ -67,5 +77,10 @@ defmodule Tinyurl.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
+  end
+
+  defp copy_bin_files(release) do
+    File.cp_r("rel/bin", Path.join(release.path, "bin"))
+    release
   end
 end
