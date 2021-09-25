@@ -11,6 +11,7 @@ defmodule TinyurlWeb.Router do
 
   scope "/api", TinyurlWeb do
     pipe_through :api
+    get "/ping", PingController, :ping
     resources "/links", LinkController, only: [:create, :delete, :index], param: "hash"
   end
 
