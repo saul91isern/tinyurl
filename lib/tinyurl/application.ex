@@ -10,19 +10,20 @@ defmodule Tinyurl.Application do
     redis_host = Application.get_env(:redix, :redis_host, "redis")
     port = Application.get_env(:redix, :redis_port, 6379)
 
-    children = [
-      # Start the Ecto repository
-      Tinyurl.Repo,
-      # Start the Telemetry supervisor
-      TinyurlWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Tinyurl.PubSub},
-      # Start the Endpoint (http/https)
-      TinyurlWeb.Endpoint,
-      # Start a worker by calling: Tinyurl.Worker.start_link(arg)
-      # {Tinyurl.Worker, arg}
-      {Redix, host: redis_host, port: port, name: :redix}
-    ] ++ workers(env)
+    children =
+      [
+        # Start the Ecto repository
+        Tinyurl.Repo,
+        # Start the Telemetry supervisor
+        TinyurlWeb.Telemetry,
+        # Start the PubSub system
+        {Phoenix.PubSub, name: Tinyurl.PubSub},
+        # Start the Endpoint (http/https)
+        TinyurlWeb.Endpoint,
+        # Start a worker by calling: Tinyurl.Worker.start_link(arg)
+        # {Tinyurl.Worker, arg}
+        {Redix, host: redis_host, port: port, name: :redix}
+      ] ++ workers(env)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

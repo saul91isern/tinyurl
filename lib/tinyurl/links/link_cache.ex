@@ -39,6 +39,10 @@ defmodule Tinyurl.Cache.LinkCache do
     GenServer.cast(__MODULE__, {:delete, link})
   end
 
+  def migrate do
+    GenServer.cast(__MODULE__, :migrate)
+  end
+
   ## GenServer Callbacks
   @impl GenServer
   def init(state) do
@@ -81,6 +85,47 @@ defmodule Tinyurl.Cache.LinkCache do
   @impl GenServer
   def handle_cast({:delete, link}, state) do
     RedisHelper.delete_link(link)
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast(:migrate, state) do
+    # Maybe we should include a deletion policy
+    # based on ttl
+    # we want to get all duplicated links by url
+    # and keep only one of the links and delete
+    # the rest of them
+
+    links_to_delete =
+      Links.duplicated_links()
+      |> Enum.flat_map(fn [_head | tail] -> tail end)
+      |> Enum.map(fn %{"id" => id, "url" => url, "hash" => hash} ->
+        %{id: id, url: url, hash: hash}
+      end)
+
+    ids_to_delete = Enum.uniq_by(links_to_delete, & &1.id)
+
+    {deleted, _} = Links.delete_all(ids_to_delete)
+
+    Logger.info("Deleted #{deleted} duplicated links from database")
+
+    unless deleted != Enum.count(ids_to_delete) do
+      {oks, errors} =
+        links_to_delete
+        |> Enum.map(&RedisHelper.delete_link/1)
+        |> Enum.split_with(&(elem(&1, 0) == :ok))
+
+      Logger.info(
+        "Deletion in cache finished with #{Enum.count(oks)} deletions and #{Enum.count(errors)} errors"
+      )
+    end
+
+    {oks, errors} =
+      Links.list_links()
+      |> Enum.map(&RedisHelper.put_link/1)
+      |> Enum.split_with(&(elem(&1, 0) == :ok))
+
+    Logger.info("Put #{Enum.count(oks)} links with #{Enum.count(errors)} erros")
     {:noreply, state}
   end
 end

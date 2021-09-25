@@ -89,4 +89,38 @@ defmodule Tinyurl.LinksTest do
       assert_raise Ecto.NoResultsError, fn -> Links.get_link!(id) end
     end
   end
+
+  describe "duplicated_links" do
+    test "get duplicated links by url" do
+      repeated_url = "https://foo/bar"
+      repeated = Enum.map(1..5, fn _ -> insert(:link, url: repeated_url) end)
+      insert(:link, url: "https://bar/baz")
+      insert(:link, url: "https://xyz/xyz")
+      ids = Enum.map(repeated, & &1.id)
+      assert [%{url: ^repeated_url, links: links}] = Links.duplicated_links()
+      assert ids == Enum.map(links, & &1["id"])
+    end
+  end
+
+  describe "delete_all/1" do
+    test "deletes all links given a set of ids" do
+      links = Enum.map(1..5, fn _ -> insert(:link) end)
+      ids = Enum.map(links, & &1.id)
+      assert {5, _} = Links.delete_all(ids)
+
+      for id <- ids do
+        assert_raise Ecto.NoResultsError, fn -> Links.get_link!(id) end
+      end
+    end
+
+    test "does not delete anything under empty id list" do
+      links = Enum.map(1..5, fn _ -> insert(:link) end)
+      ids = Enum.map(links, & &1.id)
+      assert {0, _} = Links.delete_all([])
+
+      for id <- ids do
+        assert %Link{id: ^id} = Links.get_link!(id)
+      end
+    end
+  end
 end

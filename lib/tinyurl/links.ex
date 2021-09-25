@@ -130,6 +130,42 @@ defmodule Tinyurl.Links do
     |> on_delete()
   end
 
+  @doc """
+  Gets duplicated links grouped by url.
+
+  ## Examples
+
+      iex> duplicated_links()
+      [%{url: "", ids: [...]}]
+
+  """
+  def duplicated_links do
+    Link
+    |> group_by([l], l.url)
+    |> having([l], count(l) > 1)
+    |> select([l], %{
+      url: l.url,
+      links:
+        fragment("json_agg(json_build_object('id', ?, 'url', ?, 'hash', ?))", l.id, l.url, l.hash)
+    })
+    |> Repo.all()
+  end
+
+  @doc """
+  Deletes all links by given ids.
+
+  ## Examples
+
+      iex> delete_all([id])
+      {1, [id]}
+
+  """
+  def delete_all(ids) do
+    Link
+    |> where([l], l.id in ^ids)
+    |> Repo.delete_all()
+  end
+
   defp filter(query, search) when byte_size(search) > 0 do
     query
     |> or_where([l], ilike(l.url, ^"%#{search}%"))

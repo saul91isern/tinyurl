@@ -1,5 +1,5 @@
 defmodule Tinyurl.Links.Link do
-  @moduledoc """ 
+  @moduledoc """
   Represents a Link schema 
   """
   use Ecto.Schema
