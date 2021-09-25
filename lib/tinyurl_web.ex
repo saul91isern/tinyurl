@@ -20,6 +20,7 @@ defmodule TinyurlWeb do
   def controller do
     quote do
       use Phoenix.Controller, namespace: TinyurlWeb
+      use PhoenixSwagger
 
       import Plug.Conn
       import TinyurlWeb.Gettext

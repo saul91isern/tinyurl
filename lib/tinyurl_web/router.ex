@@ -5,6 +5,10 @@ defmodule TinyurlWeb.Router do
     plug :accepts, ["json"]
   end
 
+  scope "/api/swagger" do
+    forward("/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :tinyurl, swagger_file: "swagger.json")
+  end
+
   scope "/api", TinyurlWeb do
     pipe_through :api
     resources "/links", LinkController, only: [:create, :delete, :index], param: "hash"
@@ -25,5 +29,15 @@ defmodule TinyurlWeb.Router do
       live_dashboard "/dashboard", metrics: TinyurlWeb.Telemetry
       get "/:hash", LinkController, :redirect_external
     end
+  end
+
+  def swagger_info do
+    %{
+      schemes: ["http", "https"],
+      info: %{
+        version: Application.spec(:tinyurl, :vsn),
+        title: "Tiny Url Service"
+      }
+    }
   end
 end

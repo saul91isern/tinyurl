@@ -12,6 +12,11 @@ config :tinyurl,
 
 config :tinyurl, :env, Mix.env()
 
+config :tinyurl, :phoenix_swagger,
+  swagger_files: %{
+    "priv/static/swagger.json" => [router: TinyurlWeb.Router]
+  }
+
 # Configures the endpoint
 config :tinyurl, TinyurlWeb.Endpoint,
   url: [host: "localhost"],
@@ -27,6 +32,7 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+config :phoenix_swagger, :json_library, Jason
 
 config :redix,
   redis_host: "redis",
