@@ -15,7 +15,7 @@ defmodule Tinyurl.MixProject do
       aliases: aliases(),
       deps: deps(),
       releases: [
-        td_auth: [
+        tinyurl: [
           include_executables_for: [:unix],
           applications: [runtime_tools: :permanent],
           steps: [:assemble, &copy_bin_files/1, :tar]
