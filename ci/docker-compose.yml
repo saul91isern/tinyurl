@@ -64,16 +64,17 @@ services:
       start_period: 10s
 
   service:
-    image: ${APP_NAME}:${APP_VERSION}
+    build: ../. 
     environment:
       DB_HOST: postgres
       DB_NAME: postgres
       DB_PASSWORD: postgres
       DB_USER: postgres
-      REDIS_HOST: redis
+      REDIS_HOST: redis_prod
       REDIS_PORT: "6379"
     depends_on:
       - postgres
       - redis_prod
     ports:
-      - 4000:4000
+      - "4000:4000"
+

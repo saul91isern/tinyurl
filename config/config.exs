@@ -19,11 +19,9 @@ config :tinyurl, :phoenix_swagger,
 
 # Configures the endpoint
 config :tinyurl, TinyurlWeb.Endpoint,
-  url: [host: "localhost", port: 4000],
-  secret_key_base: "I/Z5281Pc266ZULl69+Qd1FZRsFeMQolIfiPftHnCIyrGyFmrMGyvgDJ+yjnWteS",
-  render_errors: [view: TinyurlWeb.ErrorView, accepts: ~w(json), layout: false],
-  pubsub_server: Tinyurl.PubSub,
-  live_view: [signing_salt: "BmEJ9YSJ"]
+  http: [port: 4000],
+  url: [host: "localhost"],
+  render_errors: [view: TinyurlWeb.ErrorView, accepts: ~w(json), layout: false]
 
 # Configures Elixir's Logger
 config :logger, :console,

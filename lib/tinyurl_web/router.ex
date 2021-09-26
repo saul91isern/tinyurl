@@ -15,8 +15,12 @@ defmodule TinyurlWeb.Router do
     resources "/links", LinkController, only: [:create, :delete, :index], param: "hash"
   end
 
+  scope "/", TinyurlWeb do
+    pipe_through  :api
+    get "/:hash", LinkController, :redirect_external
+  end
+
   # Enables LiveDashboard only for development
-  #
   # If you want to use the LiveDashboard in production, you should put
   # it behind authentication and allow only admins to access it.
   # If your application does not have an admins-only section yet,
@@ -26,9 +30,8 @@ defmodule TinyurlWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/", TinyurlWeb do
-      pipe_through [:fetch_session, :protect_from_forgery, :api]
+      pipe_through [:fetch_session, :protect_from_forgery]
       live_dashboard "/dashboard", metrics: TinyurlWeb.Telemetry
-      get "/:hash", LinkController, :redirect_external
     end
   end
 

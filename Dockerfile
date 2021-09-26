@@ -3,8 +3,6 @@ ARG RUNTIME_BASE=alpine:3.13
 
 FROM ${RUNTIME_BASE}
 
-LABEL maintainer="info@truedat.io"
-
 ARG MIX_ENV=prod
 ARG APP_VERSION
 ARG APP_NAME
