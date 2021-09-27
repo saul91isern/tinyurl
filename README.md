@@ -40,7 +40,7 @@ To run your Application:
   * Testing `docker-compose run --rm test` in project root.
   * Service `docker-compose run --rm --service-ports service` in project root.
 
-Now you can visit [`localhost:4001`](http://localhost:4000) from your browser.
+Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 ## Learn more
 
